@@ -112,18 +112,22 @@ export default function TopicsPage() {
     : courses.filter(course => course.category === selectedCategory);
 
   return (
-    <Waves 
-      backgroundColor="#000000" 
-      strokeColor="#ffffff"
-      pointerSize={0.3}
-    >
+    <div className="relative w-full min-h-screen">
+      {/* Background */}
+      <Waves 
+        backgroundColor="#000000" 
+        strokeColor="#ffffff"
+        pointerSize={0.3}
+        className="fixed inset-0 -z-10"
+      />
+
       {/* Navigation */}
       <NavBar 
         items={[
           { name: 'Главная', url: '/', icon: HomeIcon },
-          { name: 'Курсы', url: '/topics', icon: BookOpen },
-          { name: 'Прогресс', url: '#', icon: TrendingUp },
-          { name: 'Профиль', url: '#', icon: User }
+          { name: 'Курсы', url: '/courses', icon: BookOpen },
+          { name: 'Прогресс', url: '/progress', icon: TrendingUp },
+          { name: 'Профиль', url: '/profile', icon: User }
         ]} 
         logo={
           <Image 
@@ -162,7 +166,7 @@ export default function TopicsPage() {
           {filteredCourses.map((course) => (
             <GlowCard
               key={course.id}
-              glowColor={course.color as any}
+              glowColor={course.color as 'blue' | 'purple' | 'green' | 'red' | 'orange' | 'cyan' | 'pink'}
               customSize
               className="w-full min-h-96 p-6"
             >
@@ -276,6 +280,6 @@ export default function TopicsPage() {
         </div>
         </div>
       </main>
-    </Waves>
+    </div>
   );
 }

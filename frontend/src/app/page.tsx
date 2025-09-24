@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Brain, Code, Star, TrendingUp, Users, Home as HomeIcon, User, Globe } from 'lucide-react';
+import { BookOpen, Brain, Code, Star, TrendingUp, Users, Home as HomeIcon, User, Globe, Settings } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Waves } from '@/components/ui/wave-background';
@@ -8,13 +8,14 @@ import { NavBar } from '@/components/ui/tubelight-navbar';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },
     { name: 'Курсы', url: isAuthenticated ? '/courses' : '/auth', icon: BookOpen },
     { name: 'Прогресс', url: isAuthenticated ? '/progress' : '/auth', icon: TrendingUp },
-    { name: 'Профиль', url: isAuthenticated ? '/profile' : '/auth', icon: User }
+    { name: 'Профиль', url: isAuthenticated ? '/profile' : '/auth', icon: User },
+    ...(user?.role === 'admin' ? [{ name: 'Админ', url: '/admin', icon: Settings }] : [])
   ];
 
 

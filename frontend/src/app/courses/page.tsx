@@ -5,10 +5,9 @@ import Image from 'next/image';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { useAuth } from '@/contexts/AuthContext';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function CoursesPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },
@@ -69,8 +68,7 @@ export default function CoursesPage() {
   ];
 
   return (
-    <ProtectedRoute>
-      <div className="relative w-full min-h-screen">
+    <div className="relative w-full min-h-screen">
         {/* Background */}
         <Waves 
           backgroundColor="#000000" 
@@ -163,6 +161,5 @@ export default function CoursesPage() {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
   );
 }

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { LucideIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -19,7 +20,8 @@ interface NavBarProps {
 }
 
 export function NavBar({ items, className, logo }: NavBarProps) {
-  const [activeTab, setActiveTab] = useState(items[0].name)
+  const pathname = usePathname()
+  const [activeTab, setActiveTab] = useState("")
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -31,6 +33,17 @@ export function NavBar({ items, className, logo }: NavBarProps) {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
+  // Определяем активную вкладку на основе текущего URL
+  useEffect(() => {
+    const currentItem = items.find(item => item.url === pathname)
+    if (currentItem) {
+      setActiveTab(currentItem.name)
+    } else {
+      // Если текущий URL не найден в навигации, устанавливаем первую вкладку
+      setActiveTab(items[0]?.name || "")
+    }
+  }, [pathname, items])
 
   return (
     <div
@@ -89,3 +102,4 @@ export function NavBar({ items, className, logo }: NavBarProps) {
     </div>
   )
 }
+

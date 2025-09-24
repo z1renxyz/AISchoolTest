@@ -20,6 +20,7 @@ export default function AuthPage() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
   
   const { login, register } = useAuth();
   const router = useRouter();
@@ -37,26 +38,25 @@ export default function AuthPage() {
     setError('');
 
     try {
-      let success = false;
-      
       if (isLogin) {
-        success = await login(formData.email, formData.password);
+        await login(formData.email, formData.password);
+        router.push('/');
       } else {
         if (formData.password !== formData.confirmPassword) {
           setError('Пароли не совпадают');
           setLoading(false);
           return;
         }
-        success = await register(formData.name, formData.email, formData.password);
+        const result = await register(formData.email, formData.password, formData.name);
+        
+        if (result.needsEmailConfirmation) {
+          setShowEmailConfirmation(true);
+        } else {
+          router.push('/');
+        }
       }
-
-      if (success) {
-        router.push('/');
-      } else {
-        setError(isLogin ? 'Неверный email или пароль' : 'Ошибка регистрации');
-      }
-    } catch (err) {
-      setError('Произошла ошибка');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Произошла ошибка');
     } finally {
       setLoading(false);
     }
@@ -92,6 +92,43 @@ export default function AuthPage() {
           />
         }
       />
+
+      {/* Email Confirmation Modal */}
+      {showEmailConfirmation && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-black/20 border border-white/20 rounded-2xl backdrop-blur-sm p-8 max-w-md w-full">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-500/20 border border-green-500/30 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-green-300" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-4">
+                Подтвердите ваш email
+              </h2>
+              <p className="text-white/70 mb-6">
+                Мы отправили письмо с подтверждением на <strong>{formData.email}</strong>. 
+                Пожалуйста, проверьте вашу почту и перейдите по ссылке для активации аккаунта.
+              </p>
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setShowEmailConfirmation(false);
+                    setIsLogin(true);
+                  }}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 text-white rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  Понятно
+                </button>
+                <button
+                  onClick={() => setShowEmailConfirmation(false)}
+                  className="w-full px-4 py-3 bg-transparent border border-white/20 text-white/60 rounded-lg hover:bg-white/5 transition-colors"
+                >
+                  Отмена
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="relative z-10 w-full min-h-screen">
@@ -229,3 +266,4 @@ export default function AuthPage() {
     </div>
   );
 }
+

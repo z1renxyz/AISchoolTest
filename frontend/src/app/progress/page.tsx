@@ -6,14 +6,16 @@ import { ShinyButton } from '@/components/ui/shiny-button';
 import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Trophy, Target, Calendar, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ProgressPage() {
+  const { isAuthenticated } = useAuth();
+  
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },
-    { name: 'Курсы', url: '/courses', icon: BookOpen },
-    { name: 'Прогресс', url: '/progress', icon: TrendingUp },
-    { name: 'Профиль', url: '/profile', icon: User }
+    { name: 'Курсы', url: isAuthenticated ? '/courses' : '/auth', icon: BookOpen },
+    { name: 'Прогресс', url: isAuthenticated ? '/progress' : '/auth', icon: TrendingUp },
+    { name: 'Профиль', url: isAuthenticated ? '/profile' : '/auth', icon: User }
   ];
 
   // Заглушки для данных прогресса
@@ -53,8 +55,7 @@ export default function ProgressPage() {
   const overallProgress = Math.round((progressData.completedLessons / progressData.totalLessons) * 100);
 
   return (
-    <ProtectedRoute>
-      <div className="relative w-full min-h-screen">
+    <div className="relative w-full min-h-screen">
         {/* Background */}
         <Waves 
           backgroundColor="#000000" 
@@ -234,6 +235,6 @@ export default function ProgressPage() {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
   );
 }
+

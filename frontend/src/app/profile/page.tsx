@@ -8,15 +8,14 @@ import { ShinyButton } from '@/components/ui/shiny-button';
 import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Settings, Bell, Shield, Download, LogOut, Edit3, Save, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    name: user?.name || '',
+    name: user?.full_name || '',
     email: user?.email || '',
-    telegramId: user?.telegramId || ''
+    telegramId: ''
   });
 
   const navItems = [
@@ -34,9 +33,9 @@ export default function ProfilePage() {
 
   const handleCancel = () => {
     setEditData({
-      name: user?.name || '',
+      name: user?.full_name || '',
       email: user?.email || '',
-      telegramId: user?.telegramId || ''
+      telegramId: ''
     });
     setIsEditing(false);
   };
@@ -46,8 +45,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <ProtectedRoute>
-      <div className="relative w-full min-h-screen">
+    <div className="relative w-full min-h-screen">
         {/* Background */}
         <Waves 
           backgroundColor="#000000" 
@@ -138,7 +136,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                          {user?.name}
+                          {user?.full_name}
                         </div>
                       )}
                     </div>
@@ -174,7 +172,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                          {user?.telegramId}
+                          Telegram ID не настроен
                         </div>
                       )}
                     </div>
@@ -258,6 +256,6 @@ export default function ProfilePage() {
           </div>
         </main>
       </div>
-    </ProtectedRoute>
   );
 }
+

@@ -23,7 +23,7 @@ interface NavBarProps {
 export function NavBar({ items, className, logo, isAdmin = false }: NavBarProps) {
   const pathname = usePathname()
   const [activeTab, setActiveTab] = useState("")
-  const [isMobile, setIsMobile] = useState(false)
+  const [, setIsMobile] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {

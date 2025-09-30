@@ -41,8 +41,8 @@ const TelegramAuthContext = createContext<AuthContextType | undefined>(undefined
 
 // Функции для работы с Telegram Web App
 export const getTelegramUser = (): TelegramUser | null => {
-  if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
-    return window.Telegram.WebApp.initDataUnsafe.user;
+  if (typeof window !== 'undefined' && (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp) {
+    return (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp?.initDataUnsafe?.user || null;
   }
   return null;
 };
@@ -224,7 +224,7 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initAuth = async () => {
       // Проверяем, есть ли Telegram Web App
-      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      if (typeof window !== 'undefined' && (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp) {
         await login();
       } else {
         // Fallback для разработки - создаем тестового пользователя
@@ -256,7 +256,7 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initAuth();
-  }, []);
+  }, [login]);
 
   const value: AuthContextType = {
     user,

@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Plus, Edit, Trash2, Save, X, Play, Code, BookOpen, HelpCircle, Clock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, Play, Code, BookOpen, HelpCircle, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
-import { getCourseById, getLessonsByCourse, createLesson, updateLesson, deleteLesson } from '@/lib/telegram-api';
-import { getTelegramUserId } from '@/contexts/TelegramAuthContext';
+import { getCourseById, getLessonsByCourse, createLesson, updateLesson, deleteLesson, Lesson, Course } from '@/lib/telegram-api';
 
 // Типы уроков
 const lessonTypes = [
@@ -19,11 +18,11 @@ const lessonTypes = [
 
 export default function CourseLessonsPage({ params }: { params: Promise<{ courseId: string }> }) {
   const resolvedParams = use(params);
-  const [course, setCourse] = useState<any>(null);
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [course, setCourse] = useState<Course | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingLesson, setIsAddingLesson] = useState(false);
-  const [editingLesson, setEditingLesson] = useState<any>(null);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [newLesson, setNewLesson] = useState({
     title: '',
     description: '',
@@ -53,7 +52,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
             icon: 'Code',
             lessons_count: 0,
             duration: '4-6 недель',
-            is_active: true
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
         } else {
           setCourse(courseData);
@@ -78,7 +79,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
           icon: 'Code',
           lessons_count: 0,
           duration: '4-6 недель',
-          is_active: true
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
         setLessons([]);
       } finally {
@@ -94,7 +97,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
       console.log('Adding lesson:', newLesson);
       const { data, error } = await createLesson({
         ...newLesson,
-        course_id: resolvedParams.courseId
+        course_id: resolvedParams.courseId,
+        type: newLesson.type as 'video' | 'practice' | 'reading' | 'quiz',
+        duration: parseInt(newLesson.duration) || 0
       });
       
       if (error) {
@@ -102,7 +107,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
         return;
       }
       
-      setLessons([...lessons, data]);
+      if (data) {
+        setLessons([...lessons, data]);
+      }
       setNewLesson({
         title: '',
         description: '',
@@ -116,12 +123,12 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
     }
   };
 
-  const handleEditLesson = (lesson: any) => {
+  const handleEditLesson = (lesson: Lesson) => {
     setEditingLesson(lesson);
     setNewLesson({
       title: lesson.title,
-      description: lesson.description,
-      duration: lesson.duration,
+      description: lesson.description || '',
+      duration: lesson.duration?.toString() || '0',
       type: lesson.type,
       is_active: lesson.is_active
     });
@@ -129,16 +136,24 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
   };
 
   const handleUpdateLesson = async () => {
+    if (!editingLesson) return;
+    
     try {
       console.log('Updating lesson:', editingLesson.id, newLesson);
-      const { data, error } = await updateLesson(editingLesson.id, newLesson);
+      const { data, error } = await updateLesson(editingLesson.id, {
+        ...newLesson,
+        type: newLesson.type as 'video' | 'practice' | 'reading' | 'quiz',
+        duration: parseInt(newLesson.duration) || 0
+      });
       
       if (error) {
         console.error('Error updating lesson:', error);
         return;
       }
       
-      setLessons(lessons.map(l => l.id === editingLesson.id ? data : l));
+      if (data) {
+        setLessons(lessons.map(l => l.id === editingLesson.id ? data : l));
+      }
       setEditingLesson(null);
       setNewLesson({
         title: '',

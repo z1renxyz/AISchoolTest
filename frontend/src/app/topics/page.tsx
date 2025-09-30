@@ -2,12 +2,13 @@
 
 import { BookOpen, Brain, Code, Star, TrendingUp, Users, Home as HomeIcon, User, Globe } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 
 export default function TopicsPage() {
-  const { user, isAdmin, isLoading } = useTelegramAuth();
+  const { isAdmin } = useTelegramAuth();
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },
@@ -143,13 +144,25 @@ export default function TopicsPage() {
           <footer className="border-t border-white/10 pt-8 mt-16">
             <div className="text-center">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <Image 
-                  src="/logo.svg" 
-                  alt="Школа ИИ с Владиславом" 
-                  width={24} 
-                  height={24}
-                  className="w-6 h-6 brightness-0 invert"
-                />
+                {isAdmin ? (
+                  <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                    <Image 
+                      src="/logo.svg" 
+                      alt="Школа ИИ с Владиславом" 
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6 brightness-0 invert"
+                    />
+                  </Link>
+                ) : (
+                  <Image 
+                    src="/logo.svg" 
+                    alt="Школа ИИ с Владиславом" 
+                    width={24} 
+                    height={24}
+                    className="w-6 h-6 brightness-0 invert"
+                  />
+                )}
                 <span className="text-white font-semibold">
                   Школа ИИ с Владиславом
                 </span>

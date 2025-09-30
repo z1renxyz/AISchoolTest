@@ -8,11 +8,11 @@ import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
-import { getCourses } from '@/lib/telegram-api';
+import { getCourses, Course } from '@/lib/telegram-api';
 
 export default function CoursesPage() {
-  const { user, isAdmin, isLoading } = useTelegramAuth();
-  const [courses, setCourses] = useState<any[]>([]);
+  const { isAdmin } = useTelegramAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Загрузка курсов из БД
@@ -44,7 +44,7 @@ export default function CoursesPage() {
 
   // Функция для получения иконки
   const getIconComponent = (iconName: string) => {
-    const iconMap: { [key: string]: any } = {
+    const iconMap: { [key: string]: React.ComponentType<{ className?: string }> } = {
       'Code': Code,
       'Zap': Star,
       'TrendingUp': TrendingUp,
@@ -109,7 +109,7 @@ export default function CoursesPage() {
                   <div className="text-white/60">Курсы не найдены</div>
                 </div>
               ) : (
-                courses.map((course: any) => {
+                courses.map((course: Course) => {
                   const IconComponent = getIconComponent(course.icon || 'BookOpen');
                   return (
                     <div 
@@ -151,7 +151,17 @@ export default function CoursesPage() {
             <footer className="border-t border-white/10 pt-8 mt-16">
               <div className="text-center">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                {isAdmin ? (
+                  <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                    <Image 
+                      src="/logo.svg" 
+                      alt="Школа ИИ с Владиславом" 
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6 brightness-0 invert"
+                    />
+                  </Link>
+                ) : (
                   <Image 
                     src="/logo.svg" 
                     alt="Школа ИИ с Владиславом" 
@@ -159,7 +169,7 @@ export default function CoursesPage() {
                     height={24}
                     className="w-6 h-6 brightness-0 invert"
                   />
-                </Link>
+                )}
                 <span className="text-white font-semibold">
                   Школа ИИ с Владиславом
                 </span>

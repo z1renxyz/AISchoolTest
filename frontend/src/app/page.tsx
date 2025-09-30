@@ -8,7 +8,7 @@ import { NavBar } from '@/components/ui/tubelight-navbar';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 
 export default function Home() {
-  const { user, isAdmin, isLoading } = useTelegramAuth();
+  const { isAdmin } = useTelegramAuth();
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },
@@ -138,7 +138,17 @@ export default function Home() {
           <footer className="border-t border-white/10 pt-8 mt-16">
             <div className="text-center">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                {isAdmin ? (
+                  <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                    <Image 
+                      src="/logo.svg" 
+                      alt="Школа ИИ с Владиславом" 
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6 brightness-0 invert"
+                    />
+                  </Link>
+                ) : (
                   <Image 
                     src="/logo.svg" 
                     alt="Школа ИИ с Владиславом" 
@@ -146,7 +156,7 @@ export default function Home() {
                     height={24}
                     className="w-6 h-6 brightness-0 invert"
                   />
-                </Link>
+                )}
                 <span className="text-white font-semibold">
                   Школа ИИ с Владиславом
                 </span>

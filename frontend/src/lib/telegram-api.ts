@@ -7,6 +7,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Функция для установки текущего пользователя в Supabase
+const setCurrentUser = async (userId: number) => {
+  try {
+    console.log('Setting current user in Supabase:', userId);
+    await supabase.rpc('set_current_telegram_user', { user_id: userId });
+    console.log('Current user set successfully in Supabase');
+  } catch (error) {
+    console.error('Error setting current user:', error);
+  }
+};
+
 // Типы
 export interface TelegramUser {
   id: number;
@@ -15,6 +26,13 @@ export interface TelegramUser {
   last_name?: string;
   language_code?: string;
   is_premium?: boolean;
+}
+
+export interface SupabaseError {
+  message: string;
+  details?: string;
+  hint?: string;
+  code?: string;
 }
 
 export interface Course {
@@ -55,14 +73,15 @@ export interface UserProgress {
 }
 
 // Функции для работы с курсами
-export const getCourses = async (): Promise<{ data: Course[] | null; error: any }> => {
+export const getCourses = async (): Promise<{ data: Course[] | null; error: SupabaseError | null }> => {
   try {
     console.log('Fetching courses from Supabase...');
     
     // Сначала устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
-      await setCurrentUser(userId);
+      // RLS будет работать автоматически с правильным пользователем
+      console.log('Current user ID for RLS:', userId);
     }
     
     const { data, error } = await supabase
@@ -77,21 +96,22 @@ export const getCourses = async (): Promise<{ data: Course[] | null; error: any 
       console.error('Error fetching courses:', error);
     }
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error fetching courses:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
-export const getCourseById = async (id: string): Promise<{ data: Course | null; error: any }> => {
+export const getCourseById = async (id: string): Promise<{ data: Course | null; error: SupabaseError | null }> => {
   try {
     console.log('Fetching course by ID:', id);
     
     // Сначала устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
-      await setCurrentUser(userId);
+      // RLS будет работать автоматически с правильным пользователем
+      console.log('Current user ID for RLS:', userId);
     }
     
     // Пробуем загрузить курс
@@ -120,22 +140,23 @@ export const getCourseById = async (id: string): Promise<{ data: Course | null; 
       return { data: fallbackData, error: fallbackError };
     }
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error fetching course:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 // Функции для работы с уроками
-export const getLessonsByCourse = async (courseId: string): Promise<{ data: Lesson[] | null; error: any }> => {
+export const getLessonsByCourse = async (courseId: string): Promise<{ data: Lesson[] | null; error: SupabaseError | null }> => {
   try {
     console.log('Fetching lessons for course:', courseId);
     
     // Сначала устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
-      await setCurrentUser(userId);
+      // RLS будет работать автоматически с правильным пользователем
+      console.log('Current user ID for RLS:', userId);
     }
     
     const { data, error } = await supabase
@@ -161,17 +182,24 @@ export const getLessonsByCourse = async (courseId: string): Promise<{ data: Less
       return { data: fallbackData, error: fallbackError };
     }
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error fetching lessons:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 // Функции для создания, обновления и удаления уроков
-export const createLesson = async (lessonData: any): Promise<{ data: Lesson | null; error: any }> => {
+export const createLesson = async (lessonData: Partial<Lesson>): Promise<{ data: Lesson | null; error: SupabaseError | null }> => {
   try {
     console.log('Creating lesson:', lessonData);
+    
+    // Устанавливаем текущего пользователя для RLS
+    const userId = getTelegramUserId();
+    if (userId) {
+      await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
+    }
     
     // Преобразуем duration из строки в число (минуты)
     let durationMinutes = 0;
@@ -207,24 +235,25 @@ export const createLesson = async (lessonData: any): Promise<{ data: Lesson | nu
     
     if (error) {
       console.error('Supabase error:', error);
-      return { data: null, error };
+      return { data: null, error: error as SupabaseError | null };
     }
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error creating lesson:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
-export const updateLesson = async (id: string, lessonData: any): Promise<{ data: Lesson | null; error: any }> => {
+export const updateLesson = async (id: string, lessonData: Partial<Lesson>): Promise<{ data: Lesson | null; error: SupabaseError | null }> => {
   try {
     console.log('Updating lesson:', id, lessonData);
     
-    // Сначала устанавливаем текущего пользователя для RLS
+    // Устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
       await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
     }
     
     // Подготавливаем данные для обновления
@@ -233,8 +262,6 @@ export const updateLesson = async (id: string, lessonData: any): Promise<{ data:
       description: lessonData.description,
       duration: lessonData.duration,
       type: lessonData.type,
-      is_completed: lessonData.is_completed || false,
-      is_locked: lessonData.is_locked || false,
       is_active: lessonData.is_active !== undefined ? lessonData.is_active : true
     };
     
@@ -251,24 +278,25 @@ export const updateLesson = async (id: string, lessonData: any): Promise<{ data:
     
     if (error) {
       console.error('Supabase error:', error);
-      return { data: null, error };
+      return { data: null, error: error as SupabaseError | null };
     }
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error updating lesson:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
-export const deleteLesson = async (id: string): Promise<{ error: any }> => {
+export const deleteLesson = async (id: string): Promise<{ error: SupabaseError | null }> => {
   try {
     console.log('Deleting lesson:', id);
     
-    // Сначала устанавливаем текущего пользователя для RLS
+    // Устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
       await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
     }
     
     const { error } = await supabase
@@ -278,15 +306,15 @@ export const deleteLesson = async (id: string): Promise<{ error: any }> => {
     
     console.log('Delete lesson response:', { error });
     
-    return { error };
+    return { error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error deleting lesson:', error);
-    return { error };
+    return { error: error as SupabaseError | null };
   }
 };
 
 // Функции для работы с прогрессом
-export const getUserProgress = async (telegramUserId: number): Promise<{ data: UserProgress[] | null; error: any }> => {
+export const getUserProgress = async (telegramUserId: number): Promise<{ data: UserProgress[] | null; error: SupabaseError | null }> => {
   try {
     const { data, error } = await supabase
       .from('user_progress')
@@ -296,16 +324,16 @@ export const getUserProgress = async (telegramUserId: number): Promise<{ data: U
       `)
       .eq('telegram_user_id', telegramUserId);
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 export const markLessonCompleted = async (
   telegramUserId: number, 
   lessonId: string
-): Promise<{ data: UserProgress | null; error: any }> => {
+): Promise<{ data: UserProgress | null; error: SupabaseError | null }> => {
   try {
     const { data, error } = await supabase
       .from('user_progress')
@@ -319,35 +347,48 @@ export const markLessonCompleted = async (
       .select()
       .single();
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 // Функции для админ панели
-export const createCourse = async (courseData: Partial<Course>): Promise<{ data: Course | null; error: any }> => {
+export const createCourse = async (courseData: Partial<Course>): Promise<{ data: Course | null; error: SupabaseError | null }> => {
   try {
+    console.log('Creating course:', courseData);
+    
+    // Устанавливаем текущего пользователя для RLS
+    const userId = getTelegramUserId();
+    if (userId) {
+      await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
+    }
+    
     const { data, error } = await supabase
       .from('courses')
       .insert(courseData)
       .select()
       .single();
     
-    return { data, error };
+    console.log('Create course response:', { data, error });
+    
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
-    return { data: null, error };
+    console.error('Error creating course:', error);
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
-export const updateCourse = async (id: string, courseData: Partial<Course>): Promise<{ data: Course | null; error: any }> => {
+export const updateCourse = async (id: string, courseData: Partial<Course>): Promise<{ data: Course | null; error: SupabaseError | null }> => {
   try {
     console.log('Updating course:', id, courseData);
     
-    // Сначала устанавливаем текущего пользователя для RLS
+    // Устанавливаем текущего пользователя для RLS
     const userId = getTelegramUserId();
     if (userId) {
       await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
     }
     
     const { data, error } = await supabase
@@ -359,46 +400,58 @@ export const updateCourse = async (id: string, courseData: Partial<Course>): Pro
     
     console.log('Update course response:', { data, error });
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error updating course:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
-export const deleteCourse = async (id: string): Promise<{ error: any }> => {
+export const deleteCourse = async (id: string): Promise<{ error: SupabaseError | null }> => {
   try {
+    console.log('Deleting course:', id);
+    
+    // Устанавливаем текущего пользователя для RLS
+    const userId = getTelegramUserId();
+    if (userId) {
+      await setCurrentUser(userId);
+      console.log('Current user ID for RLS:', userId);
+    }
+    
     const { error } = await supabase
       .from('courses')
       .delete()
       .eq('id', id);
     
-    return { error };
+    console.log('Delete course response:', { error });
+    
+    return { error: error as SupabaseError | null };
   } catch (error) {
-    return { error };
+    console.error('Error deleting course:', error);
+    return { error: error as SupabaseError | null };
   }
 };
 
 
 
 // Функции для работы с Telegram пользователями
-export const getTelegramUsers = async (): Promise<{ data: any[] | null; error: any }> => {
+export const getTelegramUsers = async (): Promise<{ data: TelegramUser[] | null; error: SupabaseError | null }> => {
   try {
     const { data, error } = await supabase
       .from('telegram_users')
       .select('*')
       .order('created_at');
     
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 export const updateUserAdminStatus = async (
   telegramUserId: number,
   isAdmin: boolean
-): Promise<{ data: any | null; error: any }> => {
+): Promise<{ data: TelegramUser | null; error: SupabaseError | null }> => {
   try {
     const { data, error } = await supabase
       .from('telegram_users')
@@ -407,16 +460,16 @@ export const updateUserAdminStatus = async (
       .select()
       .single();
 
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
 export const updateUserProfile = async (
   telegramUserId: number,
   profileData: { first_name?: string; username?: string }
-): Promise<{ data: any | null; error: any }> => {
+): Promise<{ data: TelegramUser | null; error: SupabaseError | null }> => {
   try {
     console.log('Updating user profile:', { telegramUserId, profileData });
 
@@ -433,10 +486,10 @@ export const updateUserProfile = async (
 
     console.log('Update profile response:', { data, error });
 
-    return { data, error };
+    return { data, error: error as SupabaseError | null };
   } catch (error) {
     console.error('Error updating profile:', error);
-    return { data: null, error };
+    return { data: null, error: error as SupabaseError | null };
   }
 };
 
@@ -514,7 +567,7 @@ export const getUserProfileStats = async (telegramUserId: number) => {
     };
   } catch (error) {
     console.error('Error calculating user stats:', error);
-    return { error };
+    return { error: error as SupabaseError | null };
   }
 };
 
@@ -539,7 +592,7 @@ export const getUserProgressStats = async (telegramUserId: number) => {
     }
 
     // Получаем все курсы
-    const { data: coursesData, error: coursesError } = await supabase
+    const { error: coursesError } = await supabase
       .from('courses')
       .select('*');
 
@@ -588,7 +641,7 @@ export const getUserProgressStats = async (telegramUserId: number) => {
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      const dayName = date.toLocaleLowerCase();
+      const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
       const dayLessons = progressData?.filter(p => {
         if (p.completed_at) {
           const completedDate = new Date(p.completed_at);
@@ -659,6 +712,6 @@ export const getUserProgressStats = async (telegramUserId: number) => {
     };
   } catch (error) {
     console.error('Error calculating progress stats:', error);
-    return { error };
+    return { error: error as SupabaseError | null };
   }
 };

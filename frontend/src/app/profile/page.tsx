@@ -18,7 +18,7 @@ export default function ProfilePage() {
     email: user?.username || '',
     telegramId: user?.id?.toString() || ''
   });
-  const [userStats, setUserStats] = useState<any>(null);
+  const [userStats, setUserStats] = useState<{ stats: { totalLessons: number; completedLessons: number; totalHours: number; completedHours: number; achievements: Array<{ earned: boolean }>; progressPercentage: number } } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -54,9 +54,9 @@ export default function ProfilePage() {
         const { stats, error } = await getUserProfileStats(user.id);
         if (error) {
           console.error('Error loading user stats:', error);
-        } else {
+        } else if (stats) {
           console.log('User stats loaded:', stats);
-          setUserStats(stats);
+          setUserStats({ stats });
         }
       } catch (error) {
         console.error('Error loading user stats:', error);
@@ -285,11 +285,11 @@ export default function ProfilePage() {
                   ) : userStats ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-white mb-2">{userStats.completedLessons}</div>
+                        <div className="text-3xl font-bold text-white mb-2">{userStats.stats.completedLessons}</div>
                         <div className="text-sm text-white/60">Завершено уроков</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-bold text-white mb-2">{userStats.completedHours}</div>
+                        <div className="text-3xl font-bold text-white mb-2">{userStats.stats.completedHours}</div>
                         <div className="text-sm text-white/60">Часов изучено</div>
                       </div>
                       <div className="text-center">
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                       </div>
                       <div className="text-center">
                         <div className="text-3xl font-bold text-white mb-2">
-                          {userStats.achievements.filter((a: any) => a.earned).length}
+                          {userStats.stats.achievements.filter((a: { earned: boolean }) => a.earned).length}
                         </div>
                         <div className="text-sm text-white/60">Достижения</div>
                       </div>

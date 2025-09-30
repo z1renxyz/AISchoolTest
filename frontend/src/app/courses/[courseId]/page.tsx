@@ -2,12 +2,11 @@
 
 import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Archive, Calendar } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
-import { getCourseById } from '@/lib/telegram-api';
+import { getCourseById, Course } from '@/lib/telegram-api';
 
 interface CourseSelectionPageProps {
   params: Promise<{ courseId: string }>;
@@ -15,8 +14,7 @@ interface CourseSelectionPageProps {
 
 export default function CourseSelectionPage({ params }: CourseSelectionPageProps) {
   const resolvedParams = use(params);
-  const router = useRouter();
-  const [course, setCourse] = useState<any>(null);
+  const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

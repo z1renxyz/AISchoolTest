@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
-import { getCourses, createCourse, updateCourse, deleteCourse } from '@/lib/telegram-api';
+import { getCourses, createCourse, updateCourse, deleteCourse, Course } from '@/lib/telegram-api';
 import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, Brain, Code, Star, TrendingUp, Users, Globe, Settings, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -22,11 +22,11 @@ const availableIcons = [
 ];
 
 export default function AdminPage() {
-  const { user, isAdmin, isLoading } = useTelegramAuth();
-  const [courses, setCourses] = useState<any[]>([]);
+  const { isAdmin } = useTelegramAuth();
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingCourse, setIsAddingCourse] = useState(false);
-  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
     description: '',
@@ -66,7 +66,9 @@ export default function AdminPage() {
         return;
       }
       
-      setCourses([...courses, data]);
+      if (data) {
+        setCourses([...courses, data]);
+      }
       setNewCourse({
         title: '',
         description: '',
@@ -81,13 +83,22 @@ export default function AdminPage() {
     }
   };
 
-  const handleEditCourse = (course: any) => {
+  const handleEditCourse = (course: Course) => {
     setEditingCourse(course);
-    setNewCourse(course);
+    setNewCourse({
+      title: course.title,
+      description: course.description || '',
+      icon: course.icon || 'Code',
+      lessons_count: course.lessons_count,
+      duration: course.duration || '0 часов',
+      is_active: course.is_active
+    });
     setIsAddingCourse(true);
   };
 
   const handleUpdateCourse = async () => {
+    if (!editingCourse) return;
+    
     try {
       const { data, error } = await updateCourse(editingCourse.id, newCourse);
       if (error) {
@@ -134,7 +145,7 @@ export default function AdminPage() {
       const course = courses.find(c => c.id === courseId);
       if (!course) return;
       
-      const { data, error } = await updateCourse(courseId, { 
+      const { error } = await updateCourse(courseId, { 
         is_active: !course.is_active 
       });
       
@@ -333,7 +344,7 @@ export default function AdminPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => {
-                const IconComponent = getIconComponent(course.icon);
+                const IconComponent = getIconComponent(course.icon || 'Code');
                 return (
                   <div 
                     key={course.id}

@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { ArrowLeft, Play, Clock, CheckCircle, BookOpen, Code, FileText, HelpCircle } from 'lucide-react';
+import { ArrowLeft, Play, Clock, BookOpen, Code, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
-import { getCourseById, getLessonsByCourse } from '@/lib/telegram-api';
+import { getCourseById, getLessonsByCourse, Course, Lesson } from '@/lib/telegram-api';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 
 interface ArchiveLessonsPageProps {
   params: Promise<{ courseId: string }>;
@@ -15,9 +16,9 @@ interface ArchiveLessonsPageProps {
 
 export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) {
   const resolvedParams = use(params);
-  const router = useRouter();
-  const [course, setCourse] = useState<any>(null);
-  const [lessons, setLessons] = useState<any[]>([]);
+  const { isAdmin } = useTelegramAuth();
+  const [course, setCourse] = useState<Course | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -179,13 +180,25 @@ export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) 
           <footer className="border-t border-white/10 pt-8 mt-16">
             <div className="text-center">
               <div className="flex items-center justify-center space-x-3 mb-4">
-                <Image 
-                  src="/logo.svg" 
-                  alt="Школа ИИ с Владиславом" 
-                  width={24} 
-                  height={24}
-                  className="w-6 h-6 brightness-0 invert"
-                />
+                {isAdmin ? (
+                  <Link href="/admin" className="hover:opacity-80 transition-opacity">
+                    <Image 
+                      src="/logo.svg" 
+                      alt="Школа ИИ с Владиславом" 
+                      width={24} 
+                      height={24}
+                      className="w-6 h-6 brightness-0 invert"
+                    />
+                  </Link>
+                ) : (
+                  <Image 
+                    src="/logo.svg" 
+                    alt="Школа ИИ с Владиславом" 
+                    width={24} 
+                    height={24}
+                    className="w-6 h-6 brightness-0 invert"
+                  />
+                )}
                 <span className="text-white font-semibold">
                   Школа ИИ с Владиславом
                 </span>

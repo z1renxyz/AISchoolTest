@@ -4,15 +4,15 @@ import { useState, useEffect } from 'react';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { ShinyButton } from '@/components/ui/shiny-button';
-import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Trophy, Target, Calendar, Award } from 'lucide-react';
+import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Trophy, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { getUserProgressStats } from '@/lib/telegram-api';
 
 export default function ProgressPage() {
-  const { user, isAdmin, isLoading } = useTelegramAuth();
-  const [progressStats, setProgressStats] = useState<any>(null);
+  const { user, isAdmin } = useTelegramAuth();
+  const [progressStats, setProgressStats] = useState<{ stats: { totalLessons: number; completedLessons: number; totalHours: number; completedHours: number; currentStreak: number; longestStreak: number; overallProgress: number; achievements: Array<{ earned: boolean }>; weeklyProgress: Array<{ day: string; lessons: number; completed: boolean }>; courseProgress: Array<{ name: string; progress: number; lessons: number; completed: number }> } } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
   const navItems = [
@@ -38,9 +38,9 @@ export default function ProgressPage() {
         if (error) {
           console.error('Error loading progress stats:', error);
           setProgressStats(null);
-        } else {
+        } else if (stats) {
           console.log('Progress stats loaded:', stats);
-          setProgressStats(stats);
+          setProgressStats({ stats });
         }
       } catch (error) {
         console.error('Error loading progress stats:', error);
@@ -81,7 +81,7 @@ export default function ProgressPage() {
     courseProgress: []
   };
 
-  const overallProgress = progressData.overallProgress || 0;
+  const overallProgress = (progressData as { stats?: { overallProgress?: number }; overallProgress?: number })?.stats?.overallProgress || (progressData as { stats?: { overallProgress?: number }; overallProgress?: number })?.overallProgress || 0;
 
   return (
     <div className="relative w-full min-h-screen">
@@ -148,15 +148,15 @@ export default function ProgressPage() {
                       <div className="text-sm text-white/60">Общий прогресс</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-white mb-2">{progressData.completedLessons}</div>
+                      <div className="text-3xl font-bold text-white mb-2">{(progressData as { stats?: { completedLessons?: number }; completedLessons?: number })?.stats?.completedLessons || (progressData as { stats?: { completedLessons?: number }; completedLessons?: number })?.completedLessons || 0}</div>
                       <div className="text-sm text-white/60">Уроков завершено</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-white mb-2">{progressData.completedHours}</div>
+                      <div className="text-3xl font-bold text-white mb-2">{(progressData as { stats?: { completedHours?: number }; completedHours?: number })?.stats?.completedHours || (progressData as { stats?: { completedHours?: number }; completedHours?: number })?.completedHours || 0}</div>
                       <div className="text-sm text-white/60">Часов изучено</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-white mb-2">{progressData.currentStreak}</div>
+                      <div className="text-3xl font-bold text-white mb-2">{(progressData as { stats?: { currentStreak?: number }; currentStreak?: number })?.stats?.currentStreak || (progressData as { stats?: { currentStreak?: number }; currentStreak?: number })?.currentStreak || 0}</div>
                       <div className="text-sm text-white/60">Дней подряд</div>
                     </div>
                   </div>
@@ -165,7 +165,7 @@ export default function ProgressPage() {
                   <div className="mt-6">
                     <div className="flex justify-between text-sm text-white/60 mb-2">
                       <span>Прогресс курса</span>
-                      <span>{progressData.completedLessons} из {progressData.totalLessons}</span>
+                      <span>{(progressData as { stats?: { completedLessons?: number; totalLessons?: number }; completedLessons?: number; totalLessons?: number })?.stats?.completedLessons || (progressData as { stats?: { completedLessons?: number; totalLessons?: number }; completedLessons?: number; totalLessons?: number })?.completedLessons || 0} из {(progressData as { stats?: { completedLessons?: number; totalLessons?: number }; completedLessons?: number; totalLessons?: number })?.stats?.totalLessons || (progressData as { stats?: { completedLessons?: number; totalLessons?: number }; completedLessons?: number; totalLessons?: number })?.totalLessons || 0}</span>
                     </div>
                     <div className="w-full bg-white/10 rounded-full h-3">
                       <div 
@@ -184,13 +184,13 @@ export default function ProgressPage() {
                       <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
                       <div className="text-white/60">Загрузка прогресса...</div>
                     </div>
-                  ) : progressData.courseProgress.length === 0 ? (
+                  ) : ((progressData as { stats?: { courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> }; courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> })?.stats?.courseProgress || (progressData as { stats?: { courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> }; courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> })?.courseProgress || []).length === 0 ? (
                     <div className="text-center py-8">
                       <div className="text-white/60">Пока нет данных по курсам</div>
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {progressData.courseProgress.map((course: any, index: number) => (
+                      {((progressData as { stats?: { courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> }; courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> })?.stats?.courseProgress || (progressData as { stats?: { courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> }; courseProgress?: Array<{ name: string; progress: number; lessons: number; completed: number }> })?.courseProgress || []).map((course: { name: string; progress: number; lessons: number; completed: number }, index: number) => (
                         <div key={index} className="flex items-center justify-between p-4 bg-white/5 rounded-xl">
                           <div className="flex-1">
                             <div className="flex justify-between text-sm mb-2">
@@ -220,7 +220,7 @@ export default function ProgressPage() {
                 <div className="bg-black/20 border border-white/20 rounded-2xl backdrop-blur-sm p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Активность на неделе</h3>
                   <div className="grid grid-cols-7 gap-2">
-                    {progressData.weeklyProgress.map((day, index) => (
+                    {((progressData as { stats?: { weeklyProgress?: Array<{ day: string; lessons: number; completed: boolean }> }; weeklyProgress?: Array<{ day: string; lessons: number; completed: boolean }> })?.stats?.weeklyProgress || (progressData as { stats?: { weeklyProgress?: Array<{ day: string; lessons: number; completed: boolean }> }; weeklyProgress?: Array<{ day: string; lessons: number; completed: boolean }> })?.weeklyProgress || []).map((day, index) => (
                       <div key={index} className="text-center">
                         <div className="text-xs text-white/60 mb-1">{day.day}</div>
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold ${
@@ -237,7 +237,7 @@ export default function ProgressPage() {
                 <div className="bg-black/20 border border-white/20 rounded-2xl backdrop-blur-sm p-6">
                   <h3 className="text-lg font-bold text-white mb-4">Достижения</h3>
                   <div className="space-y-3">
-                    {progressData.achievements.map((achievement) => (
+                    {((progressData as { stats?: { achievements?: Array<{ id: number; title: string; description: string; icon: string; earned: boolean }> }; achievements?: Array<{ id: number; title: string; description: string; icon: string; earned: boolean }> })?.stats?.achievements || (progressData as { stats?: { achievements?: Array<{ id: number; title: string; description: string; icon: string; earned: boolean }> }; achievements?: Array<{ id: number; title: string; description: string; icon: string; earned: boolean }> })?.achievements || []).map((achievement) => (
                       <div 
                         key={achievement.id}
                         className={`flex items-center space-x-3 p-3 rounded-xl ${

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 import { getCourses, createCourse, updateCourse, deleteCourse, Course } from '@/lib/telegram-api';
 import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, Brain, Code, Star, TrendingUp, Users, Globe, Settings, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
@@ -22,7 +22,7 @@ const availableIcons = [
 ];
 
 export default function AdminPage() {
-  const { isAdmin } = useTelegramAuth();
+  const { isAdmin } = useTokenAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingCourse, setIsAddingCourse] = useState(false);

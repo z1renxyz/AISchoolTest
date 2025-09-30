@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 
 export default function TopicsPage() {
-  const { isAdmin } = useTelegramAuth();
+  const { isAdmin } = useTokenAuth();
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },

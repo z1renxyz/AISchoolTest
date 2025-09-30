@@ -7,11 +7,11 @@ import { ShinyButton } from '@/components/ui/shiny-button';
 import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Trophy, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 import { getUserProgressStats } from '@/lib/telegram-api';
 
 export default function ProgressPage() {
-  const { user, isAdmin } = useTelegramAuth();
+  const { user, isAdmin } = useTokenAuth();
   const [progressStats, setProgressStats] = useState<{ stats: { totalLessons: number; completedLessons: number; totalHours: number; completedHours: number; currentStreak: number; longestStreak: number; overallProgress: number; achievements: Array<{ earned: boolean }>; weeklyProgress: Array<{ day: string; lessons: number; completed: boolean }>; courseProgress: Array<{ name: string; progress: number; lessons: number; completed: number }> } } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -34,7 +34,7 @@ export default function ProgressPage() {
       setStatsLoading(true);
       try {
         console.log('Loading progress stats for ID:', user.id);
-        const { stats, error } = await getUserProgressStats(user.id);
+        const { stats, error } = await getUserProgressStats(parseInt(user.id));
         if (error) {
           console.error('Error loading progress stats:', error);
           setProgressStats(null);

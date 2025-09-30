@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { getCourseById, getLessonsByCourse, Course, Lesson } from '@/lib/telegram-api';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 
 interface SprintLessonsPageProps {
   params: Promise<{ courseId: string }>;
@@ -16,7 +16,7 @@ interface SprintLessonsPageProps {
 
 export default function SprintLessonsPage({ params }: SprintLessonsPageProps) {
   const resolvedParams = use(params);
-  const { isAdmin } = useTelegramAuth();
+  const { isAdmin } = useTokenAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);

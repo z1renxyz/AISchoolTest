@@ -5,11 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 import { AuthError } from '@/components/ui/auth-error';
 
 export default function Home() {
-  const { isAdmin, isLoading, isAuthenticated } = useTelegramAuth();
+  const { isAdmin, isLoading, isAuthenticated } = useTokenAuth();
   
   // Показываем загрузку
   if (isLoading) {

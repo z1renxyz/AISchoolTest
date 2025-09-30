@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { useTokenAuth } from '@/contexts/TokenAuthContext';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { ShinyButton } from '@/components/ui/shiny-button';
@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { getUserProfileStats, updateUserProfile } from '@/lib/telegram-api';
 
 export default function ProfilePage() {
-  const { user, userData, logout, refreshUserData } = useTelegramAuth();
+  const { user, logout, refreshUser } = useTokenAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: user?.first_name || '',
@@ -22,22 +22,16 @@ export default function ProfilePage() {
   const [statsLoading, setStatsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Синхронизируем editData с userData
+  // Синхронизируем editData с user
   useEffect(() => {
-    if (userData) {
-      setEditData({
-        name: userData.first_name || '',
-        email: userData.username || '',
-        telegramId: userData.telegram_user_id.toString()
-      });
-    } else if (user) {
+    if (user) {
       setEditData({
         name: user.first_name || '',
         email: user.username || '',
-        telegramId: user.id.toString()
+        telegramId: user.telegram_user_id.toString()
       });
     }
-  }, [user, userData]);
+  }, [user]);
 
   // Загружаем статистику пользователя
   useEffect(() => {
@@ -51,7 +45,7 @@ export default function ProfilePage() {
       setStatsLoading(true);
       try {
         console.log('Loading user stats for ID:', user.id);
-        const { stats, error } = await getUserProfileStats(user.id);
+        const { stats, error } = await getUserProfileStats(parseInt(user.id));
         if (error) {
           console.error('Error loading user stats:', error);
         } else if (stats) {
@@ -80,7 +74,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const { data, error } = await updateUserProfile(user.id, {
+      const { data, error } = await updateUserProfile(parseInt(user.id), {
         first_name: editData.name,
         username: editData.email
       });
@@ -91,7 +85,7 @@ export default function ProfilePage() {
       } else {
         console.log('Profile saved successfully:', data);
         // Обновляем данные пользователя в контексте
-        await refreshUserData();
+        await refreshUser();
         // Обновляем локальное состояние
         if (data) {
           setEditData({
@@ -146,7 +140,7 @@ export default function ProfilePage() {
               className="w-10 h-10 brightness-0 invert"
             />
           }
-          isAdmin={userData?.is_admin || false}
+          isAdmin={user?.is_admin || false}
         />
 
         {/* Main Content */}
@@ -231,7 +225,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                          {userData?.first_name || user?.first_name}
+                          {user?.first_name}
                         </div>
                       )}
                     </div>
@@ -249,7 +243,7 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white">
-                          {userData?.username || user?.username}
+                          {user?.username}
                         </div>
                       )}
                     </div>

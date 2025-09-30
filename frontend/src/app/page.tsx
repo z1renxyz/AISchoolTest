@@ -6,9 +6,32 @@ import Image from 'next/image';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
+import { AuthError } from '@/components/ui/auth-error';
 
 export default function Home() {
-  const { isAdmin } = useTelegramAuth();
+  const { isAdmin, isLoading, isAuthenticated } = useTelegramAuth();
+  
+  // Показываем загрузку
+  if (isLoading) {
+    return (
+      <div className="relative w-full min-h-screen">
+        <Waves 
+          backgroundColor="#000000" 
+          strokeColor="#ffffff"
+          pointerSize={0.3}
+          className="fixed inset-0 -z-10"
+        />
+        <main className="relative z-10 w-full min-h-screen flex items-center justify-center">
+          <div className="text-white text-xl">Загрузка...</div>
+        </main>
+      </div>
+    );
+  }
+  
+  // Показываем ошибку аутентификации
+  if (!isAuthenticated) {
+    return <AuthError />;
+  }
   
   const navItems = [
     { name: 'Главная', url: '/', icon: HomeIcon },

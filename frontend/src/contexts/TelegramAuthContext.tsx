@@ -31,6 +31,7 @@ interface AuthContextType {
   userData: TelegramUserData | null;
   isAdmin: boolean;
   isLoading: boolean;
+  isAuthenticated: boolean;
   login: () => Promise<void>;
   logout: () => void;
   setCurrentUser: (userId: number) => Promise<void>;
@@ -63,6 +64,7 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
   const [userData, setUserData] = useState<TelegramUserData | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Синхронизация пользователя с БД
   const syncTelegramUser = async (telegramUser: TelegramUser) => {
@@ -106,11 +108,6 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
   // Проверка админ прав
   const checkAdminRights = async (userId: number): Promise<boolean> => {
     try {
-      // Для тестового пользователя (разработка на ПК) всегда админ
-      if (userId === 123456789) {
-        return true;
-      }
-
       const { data, error } = await supabase
         .from('telegram_users')
         .select('is_admin')
@@ -134,19 +131,12 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-      let telegramUser = getTelegramUser();
+      const telegramUser = getTelegramUser();
       
-      // Если Telegram Web App недоступен (разработка на ПК), создаем тестового пользователя
       if (!telegramUser) {
-        console.warn('Telegram Web App not available, using test user for development');
-        telegramUser = {
-          id: 123456789,
-          username: 'test_user',
-          first_name: 'Test',
-          last_name: 'User',
-          language_code: 'ru',
-          is_premium: false
-        };
+        console.error('Telegram Web App not available - user data not found');
+        setIsLoading(false);
+        return;
       }
 
       // Синхронизируем пользователя с БД
@@ -166,9 +156,11 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(telegramUser);
       setUserData(syncedUserData);
       setIsAdmin(adminStatus);
+      setIsAuthenticated(true);
 
     } catch (error) {
       console.error('Login error:', error);
+      setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
@@ -179,6 +171,7 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setUserData(null);
     setIsAdmin(false);
+    setIsAuthenticated(false);
   };
 
   // Обновление данных пользователя из БД
@@ -227,31 +220,9 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
       if (typeof window !== 'undefined' && (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp) {
         await login();
       } else {
-        // Fallback для разработки - создаем тестового пользователя
-        console.warn('Telegram Web App not available, using fallback');
-        const fallbackUser = {
-          id: 123456789,
-          first_name: 'Test User',
-          username: 'testuser',
-          is_premium: false
-        };
-        
-        try {
-          // Синхронизируем тестового пользователя
-          const syncedUserData = await syncTelegramUser(fallbackUser);
-          if (syncedUserData) {
-            await setCurrentUser(fallbackUser.id);
-            const adminStatus = await checkAdminRights(fallbackUser.id);
-            
-            setUser(fallbackUser);
-            setUserData(syncedUserData);
-            setIsAdmin(adminStatus);
-          }
-        } catch (error) {
-          console.error('Fallback auth error:', error);
-        } finally {
-          setIsLoading(false);
-        }
+        console.error('Telegram Web App not available - authentication failed');
+        setIsAuthenticated(false);
+        setIsLoading(false);
       }
     };
 
@@ -263,6 +234,7 @@ export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
     userData,
     isAdmin,
     isLoading,
+    isAuthenticated,
     login,
     logout,
     setCurrentUser,

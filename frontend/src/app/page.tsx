@@ -28,9 +28,10 @@ export default function Home() {
     );
   }
   
-  // Показываем ошибку аутентификации
+  // Перенаправляем на авторизацию
   if (!isAuthenticated) {
-    return <AuthError />;
+    window.location.href = '/auth';
+    return null;
   }
   
   const navItems = [

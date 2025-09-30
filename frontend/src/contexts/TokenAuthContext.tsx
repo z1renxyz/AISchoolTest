@@ -44,7 +44,8 @@ export const TokenAuthProvider = ({ children }: { children: ReactNode }) => {
   // Проверка токена
   const checkToken = async (token: string): Promise<User | null> => {
     try {
-      console.log('Checking token:', token);
+      console.log('🔍 Checking token:', token);
+      console.log('🔍 Token length:', token.length);
       
       // Проверяем токен в БД
       const { data: tokenData, error: tokenError } = await supabase
@@ -54,36 +55,66 @@ export const TokenAuthProvider = ({ children }: { children: ReactNode }) => {
         .eq('is_used', false)
         .single();
 
-      if (tokenError || !tokenData) {
-        console.error('Token not found or invalid:', tokenError);
+      console.log('🔍 Token query result:', { tokenData, tokenError });
+
+      if (tokenError) {
+        console.error('❌ Token query error:', tokenError);
+        return null;
+      }
+
+      if (!tokenData) {
+        console.error('❌ Token not found in database');
         return null;
       }
 
       // Проверяем, не истек ли токен
-      if (new Date(tokenData.expires_at) < new Date()) {
-        console.error('Token expired');
+      const now = new Date();
+      const expiresAt = new Date(tokenData.expires_at);
+      console.log('🔍 Token expiration check:', {
+        now: now.toISOString(),
+        expiresAt: expiresAt.toISOString(),
+        isExpired: expiresAt < now
+      });
+
+      if (expiresAt < now) {
+        console.error('❌ Token expired');
         return null;
       }
 
       // Получаем данные пользователя
+      console.log('🔍 Getting user data for user_id:', tokenData.user_id);
       const { data: userData, error: userError } = await supabase
         .from('telegram_users')
         .select('*')
         .eq('id', tokenData.user_id)
         .single();
 
-      if (userError || !userData) {
-        console.error('User not found:', userError);
+      console.log('🔍 User query result:', { userData, userError });
+
+      if (userError) {
+        console.error('❌ User query error:', userError);
+        return null;
+      }
+
+      if (!userData) {
+        console.error('❌ User not found in database');
         return null;
       }
 
       // Помечаем токен как использованный
-      await supabase
+      console.log('🔍 Marking token as used...');
+      const { error: updateError } = await supabase
         .from('auth_tokens')
         .update({ is_used: true, used_at: new Date().toISOString() })
         .eq('token', token);
 
-      console.log('Token validated, user:', userData);
+      if (updateError) {
+        console.error('❌ Error marking token as used:', updateError);
+      } else {
+        console.log('✅ Token marked as used');
+      }
+
+      console.log('✅ Token validated, user:', userData);
       return userData;
 
     } catch (error) {

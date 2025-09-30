@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { getCourses, createCourse, updateCourse, deleteCourse, Course } from '@/lib/telegram-api';
-import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, Brain, Code, Star, TrendingUp, Users, Globe, Settings, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, BookOpen, Brain, Code, Star, TrendingUp, Users, Globe, Settings, Eye } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Waves } from '@/components/ui/wave-background';
@@ -24,16 +24,13 @@ const availableIcons = [
 export default function AdminPage() {
   const { isAdmin } = useTelegramAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAddingCourse, setIsAddingCourse] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
   const [newCourse, setNewCourse] = useState({
     title: '',
     description: '',
     icon: 'Code',
-    lessons_count: 0,
-    duration: '',
-    is_active: true
+    color: '#3B82F6'
   });
 
   // Загрузка курсов из БД
@@ -51,7 +48,7 @@ export default function AdminPage() {
       } catch (error) {
         console.error('Error loading courses:', error);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
 
@@ -73,9 +70,7 @@ export default function AdminPage() {
         title: '',
         description: '',
         icon: 'Code',
-        lessons_count: 0,
-        duration: '',
-        is_active: true
+        color: '#3B82F6',
       });
       setIsAddingCourse(false);
     } catch (error) {
@@ -89,9 +84,7 @@ export default function AdminPage() {
       title: course.title,
       description: course.description || '',
       icon: course.icon || 'Code',
-      lessons_count: course.lessons_count,
-      duration: course.duration || '0 часов',
-      is_active: course.is_active
+      color: course.color || '#3B82F6'
     });
     setIsAddingCourse(true);
   };
@@ -116,9 +109,7 @@ export default function AdminPage() {
         title: '',
         description: '',
         icon: 'Code',
-        lessons_count: 0,
-        duration: '',
-        is_active: true
+        color: '#3B82F6',
       });
       setIsAddingCourse(false);
     } catch (error) {
@@ -146,7 +137,7 @@ export default function AdminPage() {
       if (!course) return;
       
       const { error } = await updateCourse(courseId, { 
-        is_active: !course.is_active 
+        color: course.color 
       });
       
       if (error) {
@@ -155,7 +146,7 @@ export default function AdminPage() {
       }
       
       setCourses(courses.map(c => 
-        c.id === courseId ? { ...c, is_active: !c.is_active } : c
+        c.id === courseId ? { ...c, color: c.color } : c
       ));
     } catch (error) {
       console.error('Error toggling course status:', error);
@@ -166,6 +157,26 @@ export default function AdminPage() {
     const iconData = availableIcons.find(icon => icon.name === iconName);
     return iconData ? iconData.icon : Code;
   };
+
+  // Проверяем права администратора
+  if (!isAdmin) {
+    return (
+      <div className="relative w-full min-h-screen">
+        <Waves 
+          backgroundColor="#000000" 
+          strokeColor="#ffffff"
+          pointerSize={0.3}
+          className="fixed inset-0 -z-10"
+        />
+        <main className="relative z-10 w-full min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-white mb-4">Доступ запрещен</h1>
+            <p className="text-white/70">У вас нет прав администратора</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full min-h-screen">
@@ -209,9 +220,7 @@ export default function AdminPage() {
                       title: '',
                       description: '',
                       icon: 'Code',
-                      lessons_count: 0,
-                      duration: '',
-                      is_active: true
+                      color: '#3B82F6'
                     });
                   }}
                   className="text-white/60 hover:text-white transition-colors"
@@ -240,8 +249,8 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="number"
-                    value={newCourse.lessons_count}
-                    onChange={(e) => setNewCourse({...newCourse, lessons_count: parseInt(e.target.value) || 0})}
+                    value="0"
+                    onChange={() => {}}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-colors"
                     placeholder="Количество уроков"
                   />
@@ -253,8 +262,8 @@ export default function AdminPage() {
                   </label>
                   <input
                     type="text"
-                    value={newCourse.duration}
-                    onChange={(e) => setNewCourse({...newCourse, duration: e.target.value})}
+                    value="4-6 недель"
+                    onChange={() => {}}
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white/40 focus:bg-white/20 transition-colors"
                     placeholder="Например: 4-6 недель"
                   />
@@ -308,9 +317,7 @@ export default function AdminPage() {
                       title: '',
                       description: '',
                       icon: 'Code',
-                      lessons_count: 0,
-                      duration: '',
-                      is_active: true
+                      color: '#3B82F6'
                     });
                   }}
                   className="bg-red-500/20 border-red-500/30 text-red-400"
@@ -348,11 +355,7 @@ export default function AdminPage() {
                 return (
                   <div 
                     key={course.id}
-                    className={`p-6 bg-black/20 border rounded-2xl backdrop-blur-sm transition-all duration-300 ${
-                      course.is_active 
-                        ? 'border-white/20 hover:bg-white/5' 
-                        : 'border-red-500/30 bg-red-500/10 opacity-60'
-                    }`}
+                    className="p-6 bg-black/20 border border-white/20 rounded-2xl backdrop-blur-sm transition-all duration-300 hover:bg-white/5"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
@@ -361,13 +364,9 @@ export default function AdminPage() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleToggleCourseStatus(course.id)}
-                          className={`p-2 rounded-lg transition-colors ${
-                            course.is_active 
-                              ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
-                              : 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                          }`}
+                          className="p-2 rounded-lg transition-colors bg-green-500/20 text-green-400 hover:bg-green-500/30"
                         >
-                          {course.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                          <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEditCourse(course)}
@@ -388,8 +387,8 @@ export default function AdminPage() {
                     <p className="text-white/70 text-sm mb-4">{course.description}</p>
                     
                     <div className="flex items-center justify-between text-sm text-white/60">
-                      <span>{course.lessons_count} уроков</span>
-                      <span>{course.duration}</span>
+                      <span>0 уроков</span>
+                      <span>4-6 недель</span>
                     </div>
 
                     <div className="mt-4">

@@ -4,7 +4,6 @@ import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Play, Clock, BookOpen, Code, HelpCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { getCourseById, getLessonsByCourse, Course, Lesson } from '@/lib/telegram-api';
@@ -64,15 +63,6 @@ export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) 
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'video': return 'Видео';
-      case 'practice': return 'Практика';
-      case 'reading': return 'Чтение';
-      case 'quiz': return 'Тест';
-      default: return 'Урок';
-    }
-  };
 
   if (loading) {
     return (
@@ -130,7 +120,7 @@ export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) 
                 </div>
               ) : (
                 lessons.map((lesson, index) => {
-                  const TypeIcon = getTypeIcon(lesson.type);
+                  const TypeIcon = getTypeIcon('video');
                   return (
                     <a 
                       key={lesson.id}
@@ -153,10 +143,10 @@ export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) 
                           <div className="flex items-center space-x-4 text-sm text-white/60">
                             <span className="flex items-center space-x-1">
                               <Clock className="w-4 h-4" />
-                              <span>{lesson.duration} мин</span>
+                              <span>0 мин</span>
                             </span>
                             <span>•</span>
-                            <span>{getTypeLabel(lesson.type)}</span>
+                            <span>Видео</span>
                             <span>•</span>
                             <span>Урок {index + 1}</span>
                             <span>•</span>

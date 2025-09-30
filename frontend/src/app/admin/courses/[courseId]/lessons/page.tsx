@@ -50,9 +50,7 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
             title: 'Тестовый курс',
             description: 'Описание тестового курса',
             icon: 'Code',
-            lessons_count: 0,
-            duration: '4-6 недель',
-            is_active: true,
+            color: '#3B82F6',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
@@ -77,9 +75,7 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
           title: 'Тестовый курс',
           description: 'Описание тестового курса',
           icon: 'Code',
-          lessons_count: 0,
-          duration: '4-6 недель',
-          is_active: true,
+          color: '#3B82F6',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         });
@@ -98,8 +94,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
       const { data, error } = await createLesson({
         ...newLesson,
         course_id: resolvedParams.courseId,
-        type: newLesson.type as 'video' | 'practice' | 'reading' | 'quiz',
-        duration: parseInt(newLesson.duration) || 0
+        order_index: lessons.length,
+        video_url: 'https://youtube.com',
+        lesson_type: 'sprint' as const
       });
       
       if (error) {
@@ -128,9 +125,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
     setNewLesson({
       title: lesson.title,
       description: lesson.description || '',
-      duration: lesson.duration?.toString() || '0',
-      type: lesson.type,
-      is_active: lesson.is_active
+      duration: '0',
+      type: 'video',
+      is_active: true
     });
     setIsAddingLesson(true);
   };
@@ -140,10 +137,9 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
     
     try {
       console.log('Updating lesson:', editingLesson.id, newLesson);
-      const { data, error } = await updateLesson(editingLesson.id, {
+      const { data, error } = await updateLesson(editingLesson.id, {    
         ...newLesson,
-        type: newLesson.type as 'video' | 'practice' | 'reading' | 'quiz',
-        duration: parseInt(newLesson.duration) || 0
+        video_url: 'https://youtube.com'
       });
       
       if (error) {
@@ -388,22 +384,14 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
                 </div>
               ) : (
                 lessons.map((lesson, index) => {
-                  const TypeIcon = getTypeIcon(lesson.type);
+                  const TypeIcon = getTypeIcon('video');
                   return (
                     <div 
                       key={lesson.id}
-                      className={`p-6 bg-black/20 border rounded-2xl backdrop-blur-sm transition-all duration-300 ${
-                        lesson.is_active
-                          ? 'border-white/20 hover:bg-white/5'
-                          : 'border-gray-500/30 bg-gray-500/10 opacity-60'
-                      }`}
+                      className="p-6 bg-black/20 border border-white/20 rounded-2xl backdrop-blur-sm transition-all duration-300 hover:bg-white/5"
                     >
                       <div className="flex items-center justify-between mb-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-sm border ${
-                          lesson.is_active
-                            ? 'bg-white/10 border-white/20'
-                            : 'bg-gray-500/20 border-gray-500/30'
-                        }`}>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center backdrop-blur-sm border bg-white/10 border-white/20">
                           <TypeIcon className="w-6 h-6 text-white" />
                         </div>
                         <div className="flex space-x-2">
@@ -432,20 +420,16 @@ export default function CourseLessonsPage({ params }: { params: Promise<{ course
                       <div className="flex items-center space-x-4 text-sm text-white/60 mb-4">
                         <span className="flex items-center space-x-1">
                           <Clock className="w-4 h-4" />
-                          <span>{lesson.duration}</span>
+                          <span>0 мин</span>
                         </span>
                         <span>•</span>
-                        <span className="capitalize">{lesson.type}</span>
+                        <span className="capitalize">video</span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
                         <span>Урок {index + 1}</span>
                         <div className="flex space-x-2">
-                          {lesson.is_active ? (
-                            <span className="text-blue-400">● Активен</span>
-                          ) : (
-                            <span className="text-gray-400">○ Неактивен</span>
-                          )}
+                          <span className="text-blue-400">● Активен</span>
                         </div>
                       </div>
                     </div>

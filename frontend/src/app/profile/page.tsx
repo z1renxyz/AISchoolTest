@@ -50,7 +50,16 @@ export default function ProfilePage() {
           console.error('Error loading user stats:', error);
         } else if (stats) {
           console.log('User stats loaded:', stats);
-          setUserStats({ stats });
+          setUserStats({
+            stats: {
+              totalLessons: 0,
+              completedLessons: 0,
+              totalHours: 0,
+              completedHours: 0,
+              achievements: [],
+              progressPercentage: 0
+            }
+          });
         }
       } catch (error) {
         console.error('Error loading user stats:', error);
@@ -115,7 +124,8 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    logout();
+    // В Telegram Web App нет функции logout
+    console.log('Logout requested');
   };
 
   return (

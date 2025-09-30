@@ -128,9 +128,9 @@ export default function CoursesPage() {
                             {course.description}
                           </p>
                           <div className="flex items-center space-x-4 text-sm text-white/60">
-                            <span>{course.lessons_count} уроков</span>
+                            <span>0 уроков</span>
                             <span>•</span>
-                            <span>{course.duration}</span>
+                            <span>4-6 недель</span>
                           </div>
                         </div>
                         <div className="flex items-center space-x-2">

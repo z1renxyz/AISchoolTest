@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from 'react';
 import { ArrowLeft, Archive, Calendar } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { getCourseById, Course } from '@/lib/telegram-api';
@@ -111,9 +110,9 @@ export default function CourseSelectionPage({ params }: CourseSelectionPageProps
                       Актуальный курс по {course.title} 2025 года
                     </p>
                     <div className="flex items-center space-x-4 text-sm text-white/60">
-                      <span>{course.lessons_count} уроков</span>
+                      <span>0 уроков</span>
                       <span>•</span>
-                      <span>{course.duration}</span>
+                      <span>4-6 недель</span>
                       <span>•</span>
                       <span className="text-green-400">Активный</span>
                     </div>

@@ -69,7 +69,7 @@ export function TelegramAuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   // Получение данных Telegram пользователя
-  const getTelegramUser = useCallback((): { id: number; userData: any } | null => {
+  const getTelegramUser = useCallback((): { id: number; userData: Omit<User, 'id' | 'created_at' | 'updated_at'> } | null => {
     if (typeof window === 'undefined') return null;
     
     const tg = window.Telegram?.WebApp;
@@ -91,7 +91,7 @@ export function TelegramAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Поиск или создание пользователя
-  const findOrCreateUser = useCallback(async (telegramUserId: number, userData: any): Promise<User | null> => {
+  const findOrCreateUser = useCallback(async (telegramUserId: number, userData: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User | null> => {
     try {
       console.log('🔍 Looking for user with Telegram ID:', telegramUserId);
       

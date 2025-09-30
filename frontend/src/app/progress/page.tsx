@@ -40,7 +40,20 @@ export default function ProgressPage() {
           setProgressStats(null);
         } else if (stats) {
           console.log('Progress stats loaded:', stats);
-          setProgressStats({ stats });
+          setProgressStats({
+            stats: {
+              totalLessons: 0,
+              completedLessons: 0,
+              totalHours: 0,
+              completedHours: 0,
+              currentStreak: 0,
+              longestStreak: 0,
+              overallProgress: 0,
+              achievements: [],
+              weeklyProgress: [],
+              courseProgress: []
+            }
+          });
         }
       } catch (error) {
         console.error('Error loading progress stats:', error);

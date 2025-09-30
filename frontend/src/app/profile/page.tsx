@@ -45,7 +45,7 @@ export default function ProfilePage() {
       setStatsLoading(true);
       try {
         console.log('Loading user stats for ID:', user.id);
-        const { stats, error } = await getUserProfileStats(parseInt(user.id));
+        const { stats, error } = await getUserProfileStats();
         if (error) {
           console.error('Error loading user stats:', error);
         } else if (stats) {

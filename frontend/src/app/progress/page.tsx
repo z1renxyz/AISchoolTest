@@ -34,7 +34,7 @@ export default function ProgressPage() {
       setStatsLoading(true);
       try {
         console.log('Loading progress stats for ID:', user.id);
-        const { stats, error } = await getUserProgressStats(parseInt(user.id));
+        const { stats, error } = await getUserProgressStats();
         if (error) {
           console.error('Error loading progress stats:', error);
           setProgressStats(null);

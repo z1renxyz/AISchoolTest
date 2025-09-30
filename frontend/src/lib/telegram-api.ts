@@ -52,7 +52,7 @@ export interface Lesson {
 }
 
 // Функции для работы с курсами
-export const getCourses = async (): Promise<{ data: Course[] | null; error: any }> => {
+export const getCourses = async (): Promise<{ data: Course[] | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('courses')
@@ -61,11 +61,11 @@ export const getCourses = async (): Promise<{ data: Course[] | null; error: any 
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const getCourseById = async (courseId: string): Promise<{ data: Course | null; error: any }> => {
+export const getCourseById = async (courseId: string): Promise<{ data: Course | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('courses')
@@ -75,11 +75,11 @@ export const getCourseById = async (courseId: string): Promise<{ data: Course | 
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const createCourse = async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Course | null; error: any }> => {
+export const createCourse = async (courseData: Omit<Course, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Course | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('courses')
@@ -89,11 +89,11 @@ export const createCourse = async (courseData: Omit<Course, 'id' | 'created_at' 
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const updateCourse = async (courseId: string, courseData: Partial<Course>): Promise<{ data: Course | null; error: any }> => {
+export const updateCourse = async (courseId: string, courseData: Partial<Course>): Promise<{ data: Course | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('courses')
@@ -104,11 +104,11 @@ export const updateCourse = async (courseId: string, courseData: Partial<Course>
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const deleteCourse = async (courseId: string): Promise<{ error: any }> => {
+export const deleteCourse = async (courseId: string): Promise<{ error: Error | null }> => {
   try {
     const { error } = await supabase
       .from('courses')
@@ -117,12 +117,12 @@ export const deleteCourse = async (courseId: string): Promise<{ error: any }> =>
     
     return { error };
   } catch (error) {
-    return { error };
+    return { error: error as Error };
   }
 };
 
 // Функции для работы с уроками
-export const getLessonsByCourse = async (courseId: string, lessonType?: 'sprint' | 'archive'): Promise<{ data: Lesson[] | null; error: any }> => {
+export const getLessonsByCourse = async (courseId: string, lessonType?: 'sprint' | 'archive'): Promise<{ data: Lesson[] | null; error: Error | null }> => {
   try {
     let query = supabase
       .from('lessons')
@@ -137,11 +137,11 @@ export const getLessonsByCourse = async (courseId: string, lessonType?: 'sprint'
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const createLesson = async (lessonData: Omit<Lesson, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Lesson | null; error: any }> => {
+export const createLesson = async (lessonData: Omit<Lesson, 'id' | 'created_at' | 'updated_at'>): Promise<{ data: Lesson | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('lessons')
@@ -151,11 +151,11 @@ export const createLesson = async (lessonData: Omit<Lesson, 'id' | 'created_at' 
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const updateLesson = async (lessonId: string, lessonData: Partial<Lesson>): Promise<{ data: Lesson | null; error: any }> => {
+export const updateLesson = async (lessonId: string, lessonData: Partial<Lesson>): Promise<{ data: Lesson | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('lessons')
@@ -166,11 +166,11 @@ export const updateLesson = async (lessonId: string, lessonData: Partial<Lesson>
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const deleteLesson = async (lessonId: string): Promise<{ error: any }> => {
+export const deleteLesson = async (lessonId: string): Promise<{ error: Error | null }> => {
   try {
     const { error } = await supabase
       .from('lessons')
@@ -179,22 +179,22 @@ export const deleteLesson = async (lessonId: string): Promise<{ error: any }> =>
     
     return { error };
   } catch (error) {
-    return { error };
+    return { error: error as Error };
   }
 };
 
 // Функции для работы с пользователями
-export const getUserProfileStats = async (telegramUserId: number): Promise<{ stats: any; error: any }> => {
+export const getUserProfileStats = async (): Promise<{ stats: Record<string, unknown>; error: Error | null }> => {
   try {
     // Здесь можно добавить логику для получения статистики пользователя
     // Пока возвращаем пустую статистику
     return { stats: {}, error: null };
   } catch (error) {
-    return { stats: null, error };
+    return { stats: {}, error: error as Error };
   }
 };
 
-export const updateUserProfile = async (telegramUserId: number, userData: Partial<User>): Promise<{ data: User | null; error: any }> => {
+export const updateUserProfile = async (telegramUserId: number, userData: Partial<User>): Promise<{ data: User | null; error: Error | null }> => {
   try {
     const { data, error } = await supabase
       .from('telegram_users')
@@ -205,16 +205,16 @@ export const updateUserProfile = async (telegramUserId: number, userData: Partia
     
     return { data, error };
   } catch (error) {
-    return { data: null, error };
+    return { data: null, error: error as Error };
   }
 };
 
-export const getUserProgressStats = async (telegramUserId: number): Promise<{ stats: any; error: any }> => {
+export const getUserProgressStats = async (): Promise<{ stats: Record<string, unknown>; error: Error | null }> => {
   try {
     // Здесь можно добавить логику для получения прогресса пользователя
     // Пока возвращаем пустую статистику
     return { stats: {}, error: null };
   } catch (error) {
-    return { stats: null, error };
+    return { stats: {}, error: error as Error };
   }
 };

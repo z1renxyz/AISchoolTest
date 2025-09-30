@@ -1,19 +1,17 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { setTelegramUserId } from '@/lib/telegram-api';
 
-// Типы для Telegram пользователя
-interface TelegramUser {
-  id: number;
-  username?: string;
-  first_name: string;
-  last_name?: string;
-  language_code?: string;
-  is_premium?: boolean;
-}
+// Supabase клиент
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
-interface TelegramUserData {
+// Интерфейс пользователя
+export interface User {
   id: string;
   telegram_user_id: number;
   username?: string;
@@ -26,230 +24,214 @@ interface TelegramUserData {
   updated_at: string;
 }
 
+// Типы для Telegram Web App
+interface TelegramWebApp {
+  initDataUnsafe: {
+    user?: {
+      id: number;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+      language_code?: string;
+      is_premium?: boolean;
+    };
+  };
+  ready: () => void;
+  expand: () => void;
+  close: () => void;
+}
+
+// Расширяем Window для Telegram Web App
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: TelegramWebApp;
+    };
+  }
+}
+
+// Контекст авторизации
 interface AuthContextType {
-  user: TelegramUser | null;
-  userData: TelegramUserData | null;
+  user: User | null;
   isAdmin: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: () => Promise<void>;
-  logout: () => void;
-  setCurrentUser: (userId: number) => Promise<void>;
-  refreshUserData: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
-const TelegramAuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Функции для работы с Telegram Web App
-export const getTelegramUser = (): TelegramUser | null => {
-  if (typeof window !== 'undefined' && (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp) {
-    return (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp?.initDataUnsafe?.user || null;
-  }
-  return null;
-};
-
-export const getTelegramUserId = (): number | null => {
-  const user = getTelegramUser();
-  return user?.id || null;
-};
-
-// Supabase клиент
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-export const TelegramAuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<TelegramUser | null>(null);
-  const [userData, setUserData] = useState<TelegramUserData | null>(null);
+// Провайдер авторизации
+export function TelegramAuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Синхронизация пользователя с БД
-  const syncTelegramUser = async (telegramUser: TelegramUser) => {
+  // Получение данных Telegram пользователя
+  const getTelegramUser = useCallback((): { id: number; userData: any } | null => {
+    if (typeof window === 'undefined') return null;
+    
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.initDataUnsafe?.user) return null;
+
+    const tgUser = tg.initDataUnsafe.user;
+    return {
+      id: tgUser.id,
+      userData: {
+        telegram_user_id: tgUser.id,
+        username: tgUser.username,
+        first_name: tgUser.first_name,
+        last_name: tgUser.last_name,
+        language_code: tgUser.language_code,
+        is_premium: tgUser.is_premium || false,
+        is_admin: false // По умолчанию не админ, можно изменить в БД
+      }
+    };
+  }, []);
+
+  // Поиск или создание пользователя
+  const findOrCreateUser = useCallback(async (telegramUserId: number, userData: any): Promise<User | null> => {
     try {
-      const { data, error } = await supabase
+      console.log('🔍 Looking for user with Telegram ID:', telegramUserId);
+      
+      // Устанавливаем Telegram User ID для RLS
+      await setTelegramUserId(telegramUserId);
+      
+      // Ищем существующего пользователя
+      const { data: existingUser, error: findError } = await supabase
         .from('telegram_users')
-        .upsert({
-          telegram_user_id: telegramUser.id,
-          username: telegramUser.username,
-          first_name: telegramUser.first_name,
-          last_name: telegramUser.last_name,
-          language_code: telegramUser.language_code,
-          is_premium: telegramUser.is_premium || false
-        })
-        .select()
+        .select('*')
+        .eq('telegram_user_id', telegramUserId)
         .single();
 
-      if (error) {
-        console.error('Error syncing user:', error);
+      if (findError && findError.code !== 'PGRST116') {
+        console.error('❌ Error finding user:', findError);
         return null;
       }
 
-      return data;
-    } catch (error) {
-      console.error('Error syncing user:', error);
-      return null;
-    }
-  };
-
-  // Установка текущего пользователя в Supabase
-  const setCurrentUser = async (userId: number) => {
-    try {
-      console.log('Setting current user in Supabase:', userId);
-      await supabase.rpc('set_current_telegram_user', { user_id: userId });
-      console.log('Current user set successfully in Supabase');
-    } catch (error) {
-      console.error('Error setting current user:', error);
-    }
-  };
-
-  // Проверка админ прав
-  const checkAdminRights = async (userId: number): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('telegram_users')
-        .select('is_admin')
-        .eq('telegram_user_id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error checking admin rights:', error);
-        return false;
+      if (existingUser) {
+        console.log('✅ Found existing user:', existingUser);
+        return existingUser;
       }
 
-      return data?.is_admin || false;
-    } catch (error) {
-      console.error('Error checking admin rights:', error);
-      return false;
-    }
-  };
+      // Создаем нового пользователя
+      console.log('👤 Creating new user...');
+      const { data: newUser, error: createError } = await supabase
+        .from('telegram_users')
+        .insert(userData)
+        .select('*')
+        .single();
 
-  // Авторизация
-  const login = async () => {
+      if (createError) {
+        console.error('❌ Error creating user:', createError);
+        return null;
+      }
+
+      console.log('✅ Created new user:', newUser);
+      return newUser;
+    } catch (error) {
+      console.error('❌ Error in findOrCreateUser:', error);
+      return null;
+    }
+  }, []);
+
+  // Автоматическая авторизация
+  const autoLogin = useCallback(async () => {
     try {
       setIsLoading(true);
       
       const telegramUser = getTelegramUser();
-      
       if (!telegramUser) {
-        console.error('Telegram Web App not available - user data not found');
-        setIsLoading(false);
+        console.log('❌ No Telegram user data available');
+        setIsAuthenticated(false);
         return;
       }
 
-      // Синхронизируем пользователя с БД
-      const syncedUserData = await syncTelegramUser(telegramUser);
-      if (!syncedUserData) {
-        console.error('Failed to sync user');
-        setIsLoading(false);
-        return;
+      console.log('🔍 Telegram user data:', telegramUser);
+      
+      const user = await findOrCreateUser(telegramUser.id, telegramUser.userData);
+      
+      if (user) {
+        setUser(user);
+        setIsAdmin(user.is_admin || false);
+        setIsAuthenticated(true);
+        console.log('✅ Auto-login successful:', user);
+      } else {
+        console.error('❌ Failed to find or create user');
+        setIsAuthenticated(false);
       }
-
-      // Устанавливаем текущего пользователя
-      await setCurrentUser(telegramUser.id);
-
-      // Проверяем админ права
-      const adminStatus = await checkAdminRights(telegramUser.id);
-
-      setUser(telegramUser);
-      setUserData(syncedUserData);
-      setIsAdmin(adminStatus);
-      setIsAuthenticated(true);
-
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('❌ Auto-login error:', error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [getTelegramUser, findOrCreateUser]);
 
-  // Выход
-  const logout = () => {
-    setUser(null);
-    setUserData(null);
-    setIsAdmin(false);
-    setIsAuthenticated(false);
-  };
-
-  // Обновление данных пользователя из БД
-  const refreshUserData = async () => {
+  // Обновление данных пользователя
+  const refreshUser = useCallback(async () => {
+    if (!user) return;
+    
     try {
-      if (!user?.id) return;
-
-      console.log('Refreshing user data for ID:', user.id);
-
-      // Получаем актуальные данные из БД
-      const { data, error } = await supabase
+      const { data: updatedUser, error } = await supabase
         .from('telegram_users')
         .select('*')
-        .eq('telegram_user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (error) {
-        console.error('Error refreshing user data:', error);
+        console.error('❌ Error refreshing user:', error);
         return;
       }
 
-      if (data) {
-        console.log('User data refreshed:', data);
-        setUserData(data);
-        // Также обновляем локальные данные пользователя
-        setUser({
-          id: data.telegram_user_id,
-          username: data.username,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          language_code: data.language_code,
-          is_premium: data.is_premium
-        });
-        // Обновляем статус админа
-        setIsAdmin(data.is_admin);
+      if (updatedUser) {
+        setUser(updatedUser);
+        setIsAdmin(updatedUser.is_admin || false);
+        console.log('✅ User data refreshed:', updatedUser);
       }
     } catch (error) {
-      console.error('Error refreshing user data:', error);
+      console.error('❌ Error refreshing user:', error);
     }
-  };
+  }, [user]);
 
-  // Автоматическая авторизация при загрузке
+  // Инициализация при загрузке
   useEffect(() => {
     const initAuth = async () => {
-      // Проверяем, есть ли Telegram Web App
-      if (typeof window !== 'undefined' && (window as { Telegram?: { WebApp?: { initDataUnsafe?: { user?: TelegramUser } } } }).Telegram?.WebApp) {
-        await login();
+      // Ждем, пока Telegram Web App загрузится
+      if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        
+        // Небольшая задержка для инициализации
+        setTimeout(autoLogin, 100);
       } else {
-        console.error('Telegram Web App not available - authentication failed');
-        setIsAuthenticated(false);
+        console.log('❌ Telegram Web App not available');
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, [login]);
+  }, [autoLogin]);
 
   const value: AuthContextType = {
     user,
-    userData,
     isAdmin,
     isLoading,
     isAuthenticated,
-    login,
-    logout,
-    setCurrentUser,
-    refreshUserData
+    refreshUser
   };
 
   return (
-    <TelegramAuthContext.Provider value={value}>
+    <AuthContext.Provider value={value}>
       {children}
-    </TelegramAuthContext.Provider>
+    </AuthContext.Provider>
   );
-};
+}
 
+// Хук для использования контекста
 export const useTelegramAuth = () => {
-  const context = useContext(TelegramAuthContext);
+  const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useTelegramAuth must be used within a TelegramAuthProvider');
   }

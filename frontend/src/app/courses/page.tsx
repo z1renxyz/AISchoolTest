@@ -7,11 +7,11 @@ import Link from 'next/link';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { ShinyButton } from '@/components/ui/shiny-button';
-import { useTokenAuth } from '@/contexts/TokenAuthContext';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { getCourses, Course } from '@/lib/telegram-api';
 
 export default function CoursesPage() {
-  const { isAdmin } = useTokenAuth();
+  const { isAdmin } = useTelegramAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   

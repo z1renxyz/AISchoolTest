@@ -5,11 +5,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
-import { useTokenAuth } from '@/contexts/TokenAuthContext';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { AuthError } from '@/components/ui/auth-error';
 
 export default function Home() {
-  const { isAdmin, isLoading, isAuthenticated } = useTokenAuth();
+  const { isAdmin, isLoading, isAuthenticated } = useTelegramAuth();
   
   // Показываем загрузку
   if (isLoading) {
@@ -28,10 +28,9 @@ export default function Home() {
     );
   }
   
-  // Перенаправляем на авторизацию
+  // Показываем ошибку авторизации
   if (!isAuthenticated) {
-    window.location.href = '/auth';
-    return null;
+    return <AuthError />;
   }
   
   const navItems = [

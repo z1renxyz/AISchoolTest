@@ -7,11 +7,11 @@ import { ShinyButton } from '@/components/ui/shiny-button';
 import { Home as HomeIcon, BookOpen, TrendingUp, User, ArrowLeft, Trophy, Award } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useTokenAuth } from '@/contexts/TokenAuthContext';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { getUserProgressStats } from '@/lib/telegram-api';
 
 export default function ProgressPage() {
-  const { user, isAdmin } = useTokenAuth();
+  const { user, isAdmin } = useTelegramAuth();
   const [progressStats, setProgressStats] = useState<{ stats: { totalLessons: number; completedLessons: number; totalHours: number; completedHours: number; currentStreak: number; longestStreak: number; overallProgress: number; achievements: Array<{ earned: boolean }>; weeklyProgress: Array<{ day: string; lessons: number; completed: boolean }>; courseProgress: Array<{ name: string; progress: number; lessons: number; completed: number }> } } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 

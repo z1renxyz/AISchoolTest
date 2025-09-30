@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Waves } from '@/components/ui/wave-background';
 import { ShinyButton } from '@/components/ui/shiny-button';
 import { getCourseById, getLessonsByCourse, Course, Lesson } from '@/lib/telegram-api';
-import { useTokenAuth } from '@/contexts/TokenAuthContext';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 
 interface ArchiveLessonsPageProps {
   params: Promise<{ courseId: string }>;
@@ -16,7 +16,7 @@ interface ArchiveLessonsPageProps {
 
 export default function ArchiveLessonsPage({ params }: ArchiveLessonsPageProps) {
   const resolvedParams = use(params);
-  const { isAdmin } = useTokenAuth();
+  const { isAdmin } = useTelegramAuth();
   const [course, setCourse] = useState<Course | null>(null);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [loading, setLoading] = useState(true);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTokenAuth } from '@/contexts/TokenAuthContext';
+import { useTelegramAuth } from '@/contexts/TelegramAuthContext';
 import { Waves } from '@/components/ui/wave-background';
 import { NavBar } from '@/components/ui/tubelight-navbar';
 import { ShinyButton } from '@/components/ui/shiny-button';
@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { getUserProfileStats, updateUserProfile } from '@/lib/telegram-api';
 
 export default function ProfilePage() {
-  const { user, logout, refreshUser } = useTokenAuth();
+  const { user, refreshUser } = useTelegramAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
     name: user?.first_name || '',
